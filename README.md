@@ -18,7 +18,7 @@ expected output: "1,1.5,2,3,4,6,7"
 input: MyApp.ps1 "sample1.txt" "numeric" "descending"
 expected output: "7,6,4,3,2,1.5,1"
 ```
-````
+```
 sample2.txt: "11, 12, 1e10, 'c', b, 'a', 15, 21, '50'"
 input: MyApp.ps1 "sample2.txt" "numeric" "ascending"
 expected output: "11, 12, 15, 21, 10000000000"
