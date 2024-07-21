@@ -1,4 +1,4 @@
-function ConvertTo-Double($item) {
+function ConvertTo-DoubleOrString($item) {
     if (($item -eq ' ') -or ($item -eq '')) {
         return $null
     }
@@ -53,7 +53,7 @@ function Get-Contents($filepath, $filter) {
     $outs = @()
     #FIXME: adding to an array probably is very slow
     foreach ($item in $items ) {
-        $outs += ConvertTo-Double($item)
+        $outs += ConvertTo-DoubleOrString($item)
     }
     $outFiltered = Select-ByType $outs $filter
     return $outFiltered
