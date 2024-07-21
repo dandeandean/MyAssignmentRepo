@@ -37,24 +37,34 @@ function ParseArgs($argv) {
     }
 }
 
-ParseArgs $args
-
-
-#TODO: Fix this whole block, should probably be a one-liner
-$items =  Get-Content -Path $filepath 
-$items = $items.Split(",")
-$outs = @()
-foreach ($item in $items ){
-    $outs += SmartCast($item)
+function ParseFile($filepath, $filter) {
+    # Maybe this should just return alpha & numeric as a tuple
+    $items = Get-Content -Path $filepath 
+    $items = $items.Split(",")
+    $outs = @()
+    foreach ($item in $items ) {
+        $outs += SmartCast($item)
+    }
+    $outFiltered = FilterByType $outs $filter
+    return $outFiltered
 }
-$outFiltered = FilterByType $outs $filter
-#FIXME
+
+function SwitchSort($items, $direction) {
 switch ($direction[0]) {
     "d" {   
-        $outFiltered = $outFiltered | Sort-Object -Descending
+        $sortedItems = $items | Sort-Object -Descending
       }
     Default {
-        $outFiltered = $outFiltered | Sort-Object
+        $sortedItems = $items | Sort-Object
     }
 }
-Write-Host $outFiltered
+    return $sortedItems
+}
+
+ParseArgs $args
+
+$parsedItems = ParseFile $filepath $filter
+
+$sortedItems = SwitchSort $parsedItems $direction
+
+Write-Host $sortedItems
