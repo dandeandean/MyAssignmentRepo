@@ -62,14 +62,7 @@ function Get-Contents($filepath, $filter) {
 function Set-Items($items, $direction) {
     # FIXME: try https://stackoverflow.com/questions/31597657/sorting-objects-by-multiple-properties
     # There has GOT to be another way of doing this
-    switch ($direction[0]) {
-        "d" {   
-            $sortedItems = $items | Sort-Object -Descending
-        }
-        Default {
-            $sortedItems = $items | Sort-Object
-        }
-    }
+    $sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
     return $sortedItems
 }
 
