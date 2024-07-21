@@ -51,6 +51,7 @@ function FilterFile($filepath, $filter) {
 }
 
 function SwitchSort($items, $direction) {
+    # FIXME: try https://stackoverflow.com/questions/31597657/sorting-objects-by-multiple-properties
     # There has GOT to be another way of doing this
     switch ($direction[0]) {
         "d" {   
