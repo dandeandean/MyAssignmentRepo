@@ -38,8 +38,7 @@ function ParseArgs($argv) {
     return @($filepath, $filter, $direction)
 }
 
-# FIXME: rename this func
-function ParseFile($filepath, $filter) {
+function FilterFile($filepath, $filter) {
     # Maybe this should just return alpha & numeric as a tuple
     $items = Get-Content -Path $filepath 
     $items = $items.Split(",")
@@ -66,7 +65,7 @@ function SwitchSort($items, $direction) {
 
 $filepath, $filter, $direction = ParseArgs $args
 
-$items = ParseFile $filepath $filter
+$items = FilterFile $filepath $filter
 
 $sortedItems = SwitchSort $items $direction
 
