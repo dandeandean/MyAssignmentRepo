@@ -1,4 +1,7 @@
-function SmartCast($item) {
+function ConvertTo-Double($item) {
+    if (($item -eq ' ') -or ($item -eq '')) {
+        return $null
+    }
     try {
         $item = [double] $item
     }
@@ -9,12 +12,12 @@ function SmartCast($item) {
     return $item
 }
 
-function FilterByType($array, $type){
+function Select-ByType($array, $type){
     $out = ($array | Where-Object { $_ -is [type]$type })
     return $out
 }
 
-function ParseArgs($argv) {
+function Format-Args($argv) {
     if ($argv.count -ne 3) {
         throw "Usage: Sort.ps1 <File> <Type> <Direction>"
     }
@@ -38,19 +41,25 @@ function ParseArgs($argv) {
     return @($filepath, $filter, $direction)
 }
 
-function FilterFile($filepath, $filter) {
+function Get-Contents($filepath, $filter) {
     # Maybe this should just return alpha & numeric as a tuple
     $items = Get-Content -Path $filepath 
-    $items = $items.Split(",")
-    $outs = @()
-    foreach ($item in $items ) {
-        $outs += SmartCast($item)
+    try {    
+        $items = $items.Split(",")
     }
-    $outFiltered = FilterByType $outs $filter
+    catch {
+        throw "Failed to parse the file. Make sure the file is a CSV." 
+    }
+    $outs = @()
+    #FIXME: adding to an array probably is very slow
+    foreach ($item in $items ) {
+        $outs += ConvertTo-Double($item)
+    }
+    $outFiltered = Select-ByType $outs $filter
     return $outFiltered
 }
 
-function SwitchSort($items, $direction) {
+function Set-Items($items, $direction) {
     # FIXME: try https://stackoverflow.com/questions/31597657/sorting-objects-by-multiple-properties
     # There has GOT to be another way of doing this
     switch ($direction[0]) {
@@ -64,10 +73,7 @@ function SwitchSort($items, $direction) {
     return $sortedItems
 }
 
-$filepath, $filter, $direction = ParseArgs $args
-
-$items = FilterFile $filepath $filter
-
-$sortedItems = SwitchSort $items $direction
-
+$filepath, $filter, $direction = Format-Args $args
+$items = Get-Contents $filepath $filter
+$sortedItems = Set-Items $items $direction
 Write-Host $sortedItems
