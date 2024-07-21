@@ -1,4 +1,4 @@
-# PowerShell
+# MyAssignmentRepo
 ## Goal
 Write a PowerShell script that reads the contents of a file with comma separated values from disk and prints the numeric and/or alphabetic values from the file depending on what the user requests. 
 
