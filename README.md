@@ -11,7 +11,7 @@ Takes 3 parameters:
 
 ## Sample inputs and outputs
 
-```PowerShell
+```
 sample1.txt: "1,4,6,7,3,2,1.5"
 input: MyApp.ps1 "sample1.txt" "numeric" "ascending"
 expected output: "1,1.5,2,3,4,6,7"
@@ -26,4 +26,16 @@ input: MyApp.ps1 "sample2.txt" "alpha" "ascending"
 expected output: "'50', 'a', b, 'c'"
 input: MyApp.ps1 "sample2.txt" "both" "ascending"
 expected output: "11, 12, 15, 21, 10000000000, '50', 'a', b, 'c'"
+```
+## Usage
+```
+Sort.ps1 <File> <Type> <Direction>
+```
+### Example MacOS
+```bash
+pwsh Sort.ps1 samples/sample2.txt both descending
+```
+### Example Windows
+```PowerShell
+.\Sort.ps1 .\samples\sample2.txt numeric ascending
 ```
