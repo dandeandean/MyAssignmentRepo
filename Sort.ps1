@@ -69,30 +69,70 @@ function Get-Contents($filepath) {
     return @($itemsAlpha, $itemsNumeric)
 }
 
-function Set-Items($items, $direction) {
+function Set-ItemsTyped($items, $direction, $filter) {
     <#
     .Description
     Set-Items takes the items & direction and sorts the items in that direction
-    #>     
+    #>
+    if ($filter -eq "string") {
+        <# This is all very bad
+        # Also very flimsy b/c we don't account for «» or „“ ... 
+        # Actually there are a lot of diffent quotation marks
+        # see: https://en.wikipedia.org/wiki/Quotation_mark
+        #>
+        $hash = @{}
+        foreach ($item in $items) {
+            $value = @($item)
+            if ($item -match "'*'"){
+                $itemStripped = $item.Replace( "'" , "")
+                if ($hash.ContainsKey($itemStripped)){
+                    $hash[$item] += $value
+                }
+                else{
+                    $hash.Add($itemStripped,@($item))
+                }
+            }
+            elseif ($item -match '"*"'){
+                $itemStripped = $item.Replace( '"' , "")
+                if ($hash.ContainsKey($itemStripped)){
+                    $hash[$item] += $value
+                }
+                else {
+                    $hash.Add($itemStripped,@($item))
+                }
+            } else {
+                if ($hash.ContainsKey($item)){
+                    $hash[$item] += $value
+                }
+                else{
+                $hash.Add($item,$value)
+                }
+            }
+        }
+        $out = @()
+        ($hash.GetEnumerator() | Sort-Object ) | ForEach-Object {
+            $out += $_.Value
+        }
+        return $out
+    }
     $sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
     return $sortedItems
 }
 
 $filepath, $filter, $direction = Format-Args $args
 $itemsAlpha, $itemsNumeric = Get-Contents $filepath
-Write-Host $filter
 switch ($filter[0]) {
     "s" { #from string
         $items = $itemsAlpha 
-        $sortedItems = Set-Items $items $direction
-        }
+        $sortedItems = Set-ItemsTyped $items $direction "string"
+    }
     "d" {#from double
         $items = $itemsNumeric 
-        $sortedItems = Set-Items $items $direction
+        $sortedItems = Set-ItemsTyped $items $direction "double"
     }
     Default {
-        $sortedN = Set-Items $itemsNumeric $direction
-        $sortedA = Set-Items $itemsAlpha $direction
+        $sortedN = Set-ItemsTyped $itemsNumeric $direction "double"
+        $sortedA = Set-ItemsTyped $itemsAlpha $direction "string"
         $sortedItems = $sortedN + $sortedA
     }
 }
