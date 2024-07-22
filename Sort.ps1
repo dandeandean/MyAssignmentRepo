@@ -72,7 +72,7 @@ function Get-Contents($filepath) {
 function Set-ItemsTyped($items, $direction, $filter) {
     <#
     .Description
-    Set-Items takes the items & direction and sorts the items in that direction
+    Set-Items takes the items, direction & and filter and returns 
     #>
     if ($filter -eq "string") {
         <# This is all very bad
@@ -110,7 +110,7 @@ function Set-ItemsTyped($items, $direction, $filter) {
             }
         }
         $out = @()
-        ($hash.GetEnumerator() | Sort-Object ) | ForEach-Object {
+        ($hash.GetEnumerator() | Sort-Object -Descending:($direction[0] -eq 'd') ) | ForEach-Object {
             $out += $_.Value
         }
         return $out
