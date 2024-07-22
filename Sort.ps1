@@ -65,13 +65,9 @@ function Set-ItemsTyped($items, $direction, $filter) {
     Set-Items takes the items, direction & and filter and returns 
     #>
     if ($filter -eq "string") {
-        <# This is all very bad
-        # Also very flimsy b/c we don't account for «» or „“ ... 
-        # Actually there are a lot of diffent quotation marks
-        # see: https://en.wikipedia.org/wiki/Quotation_mark
-        #>
         $hash = @{}
         foreach ($item in $items) {
+            Write-Host $hash
             $value = @($item)
             if ($item -match "'*'"){
                 $itemStripped = $item.Replace( "'" , "")
