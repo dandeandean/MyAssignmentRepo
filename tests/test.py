@@ -1,5 +1,5 @@
 import os, subprocess, sys
-def invoke(filepath: str, type: str, direction: str ) -> None:
+def sortps1(filepath: str, type: str, direction: str ) -> None:
     if ("Sort.ps1" not in os.listdir()):
         print("Something horrible happened!")
         return 
@@ -12,6 +12,7 @@ def invoke(filepath: str, type: str, direction: str ) -> None:
 
 
 if __name__ == "__main__":
-    invoke("samples/sample1.txt","numeric","descending")
-    invoke("samples/sample2.txt","numeric","descending")
-    invoke("samples/sample3.txt","numeric","descending")
+    sortps1("samples/sample1.txt","numeric","descending")
+    sortps1("samples/sample2.txt","numeric","descending")
+    sortps1("samples/sample-empty.txt","numeric","descending")
+    sortps1("samples/sample-nothing.txt","numeric","descending")

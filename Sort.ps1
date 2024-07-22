@@ -6,7 +6,6 @@ function ConvertTo-DoubleOrString($item) {
         $item = [double] $item
     }
     catch  {
-        # Not strictly necessary
         $item = [string] $item
     }
     return $item
@@ -50,12 +49,8 @@ function Get-Contents($filepath, $filter) {
     catch {
         throw "Failed to parse the file. Make sure the file is a CSV." 
     }
-    $outs = @()
-    #FIXME: adding to an array probably is very slow
-    foreach ($item in $items ) {
-        $outs += ConvertTo-DoubleOrString($item)
-    }
-    $outFiltered = Select-ByType $outs $filter
+    $itemsFiltered = $items | ForEach-Object{ConvertTo-DoubleOrString($_)} 
+    $outFiltered = Select-ByType $itemsFiltered $filter
     return $outFiltered
 }
 
@@ -67,5 +62,5 @@ function Set-Items($items, $direction) {
 
 $filepath, $filter, $direction = Format-Args $args
 $items = Get-Contents $filepath $filter
-$sortedItems = Set-Items $items $direction
-Write-Host $sortedItems
+$sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
+Write-Host ($sortedItems -Join ", ")
