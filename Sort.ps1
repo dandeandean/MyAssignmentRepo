@@ -1,4 +1,3 @@
-
 function Format-Args($argv) {
     if ($argv.count -ne 3) {
         throw "Usage: Sort.ps1 <File> <Type> <Direction>"
