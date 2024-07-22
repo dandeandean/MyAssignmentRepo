@@ -1,20 +1,3 @@
-function ConvertTo-DoubleOrString($item) {
-    if (($item -eq ' ') -or ($item -eq '')) {
-        return $null
-    }
-    try {
-        $item = [double] $item
-    }
-    catch  {
-        $item = [string] $item
-    }
-    return $item
-}
-
-function Select-ByType($array, $type){
-    $out = ($array | Where-Object { $_ -is [type]$type })
-    return $out
-}
 
 function Format-Args($argv) {
     if ($argv.count -ne 3) {
@@ -40,7 +23,22 @@ function Format-Args($argv) {
     return @($filepath, $filter, $direction)
 }
 
-
+function ConvertTo-DoubleOrString($item) {
+    <#
+        .DESCRIPTION
+        ConvertTo-DoubleOrString attempts to convert $item to a double, then to a string if that fails
+    #>
+    if (($item -eq ' ') -or ($item -eq '')) {
+        return $null
+    }
+    try {
+        $item = [double] $item
+    }
+    catch  {
+        $item = [string] $item
+    }
+    return $item
+}
 function Get-ContentsTyped($filepath, $filter) {
     <#
         .DESCRIPTION
@@ -54,9 +52,9 @@ function Get-ContentsTyped($filepath, $filter) {
     catch {
         return @()
     }
-    $itemsFiltered = $items | ForEach-Object{ConvertTo-DoubleOrString($_)} 
-    $outFiltered = Select-ByType $itemsFiltered $filter
-    return $outFiltered
+    $itemsCasted = $items | ForEach-Object{ConvertTo-DoubleOrString($_)} 
+    $itemsFiltered = ($itemsCasted | Where-Object { $_ -is [type]$filter })
+    return $itemsFiltered
 }
 
 function Set-AlphaSorted($items, $direction) {
@@ -87,6 +85,10 @@ function Set-AlphaSorted($items, $direction) {
 }
 
 function Set-NumericSorted($items, $direction) {
+    <#
+        .DESCRIPTION
+        Set-NumericSorted takes an array of doubles and sorts them in ascending or descending $direction
+    #>
     $sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
     return $sortedItems
 }
