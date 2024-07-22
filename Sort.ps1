@@ -41,15 +41,15 @@ function Format-Args($argv) {
 }
 
 
-function Get-Contents($filepath, $filter) {
+function Get-ContentsTyped($filepath, $filter) {
     <#
         .DESCRIPTION
-        Get-Contents takes a filepath & filter and returns the filter applied to the contents of the file in an array.
+        Get-ContentsTyped takes a filepath & filter and returns the filter applied to the contents of the file in an array.
         If it fails to split the items by comma, then it returns an empty array.
     #>
     $items = Get-Content -Path $filepath 
     try {    
-        $items = $items.Split(",") -replace " ", ""
+        $items = ($items.Split(",")).Trim() 
     }
     catch {
         return @()
@@ -59,40 +59,24 @@ function Get-Contents($filepath, $filter) {
     return $outFiltered
 }
 
-function Set-ItemsTyped($items, $direction, $filter) {
+function Set-AlphaSorted($items, $direction) {
     <#
-    .Description
-    Set-Items takes the items, direction & and filter and returns 
+        .DESCRIPTION
+        Set-AlphaSorted takes an array of strings and sorts them ignoring 
+        anything in the form "*" and '*'
     #>
-    if ($filter -eq "string") {
         $hash = @{}
         foreach ($item in $items) {
-            Write-Host $hash
             $value = @($item)
             if ($item -match "'*'"){
                 $itemStripped = $item.Replace( "'" , "")
-                if ($hash.ContainsKey($itemStripped)){
-                    $hash[$item] += $value
-                }
-                else{
-                    $hash.Add($itemStripped,@($item))
-                }
+                $hash[$itemStripped] += $value
             }
             elseif ($item -match '"*"'){
                 $itemStripped = $item.Replace( '"' , "")
-                if ($hash.ContainsKey($itemStripped)){
-                    $hash[$item] += $value
-                }
-                else {
-                    $hash.Add($itemStripped,@($item))
-                }
+                $hash[$itemStripped] += $value
             } else {
-                if ($hash.ContainsKey($item)){
-                    $hash[$item] += $value
-                }
-                else{
-                $hash.Add($item,$value)
-                }
+                $hash[$item] += $value
             }
         }
         $out = @()
@@ -100,22 +84,24 @@ function Set-ItemsTyped($items, $direction, $filter) {
             $out += $_.Value
         }
         return $out
-    }
+}
+
+function Set-NumericSorted($items, $direction) {
     $sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
     return $sortedItems
 }
 
 ##### Main Functionality ######
 $filepath, $filter, $direction = Format-Args $args
-$itemsAlpha = Get-Contents $filepath "string"
-$itemsNumeric = Get-Contents $filepath "double"
-$sortedNumeric = Set-ItemsTyped $itemsNumeric $direction "double"
-$sortedAlpha = Set-ItemsTyped $itemsAlpha $direction "string"
+$itemsAlpha = Get-ContentsTyped $filepath "string"
+$itemsNumeric = Get-ContentsTyped $filepath "double"
+$sortedNumeric = Set-NumericSorted $itemsNumeric $direction
+$sortedAlpha = Set-AlphaSorted $itemsAlpha $direction
 switch ($filter[0]) {
-    "s" { #from string
+    "s" { #string
         $items = $sortedAlpha 
     }
-    "d" { #from double
+    "d" { #double
         $items = $sortedNumeric 
     }
     Default {
