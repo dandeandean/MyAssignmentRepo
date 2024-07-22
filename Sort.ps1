@@ -41,13 +41,16 @@ function Format-Args($argv) {
 }
 
 function Get-Contents($filepath, $filter) {
-    # Maybe this should just return alpha & numeric as a tuple
+    <#
+        .DESCRIPTION
+        Get-Contents takes a filepath & filter and returns the filter applied to the contents of the file in an array.
+        If it fails to split the items by comma, then it returns an empty array.
+    #>
     $items = Get-Content -Path $filepath 
     try {    
         $items = $items.Split(",")
     }
     catch {
-        # throw "Failed to parse the file. Make sure the file is a CSV." 
         return @()
     }
     $itemsFiltered = $items | ForEach-Object{ConvertTo-DoubleOrString($_)} 

@@ -18,6 +18,7 @@ if __name__ == "__main__":
     sortps1("samples/sample1.txt","both","descending")
     sortps1("samples/sample2.txt","alpha","ascending")
     sortps1("samples/sample2.txt","numeric","descending")
+    sortps1("samples/sample2.txt","both","ascending")
     # Should be nothing
     sortps1("samples/sample-nothing.txt","numeric","descending")
     sortps1("samples/sample-empty.txt","numeric","descending")
