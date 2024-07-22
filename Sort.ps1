@@ -41,7 +41,12 @@ function Format-Args($argv) {
     return @($filepath, $filter, $direction)
 }
 
-function Get-Contents($filepath, $filter) {
+function Get-Contents($filepath) {
+    <#
+    .Description
+    Get-Contents takes the filepath & returns a list of @(alpha , numeric) 
+    based on whether or not we could cast each item into a numeric type (double) or not
+    #>        
     # Maybe this should just return alpha & numeric as a tuple
     $items = Get-Content -Path $filepath 
     try {    
@@ -51,20 +56,44 @@ function Get-Contents($filepath, $filter) {
         throw "Failed to parse the file. Make sure the file is a CSV." 
     }
     $outs = @()
-    #FIXME: adding to an array probably is very slow
     foreach ($item in $items ) {
         $outs += ConvertTo-DoubleOrString($item)
     }
-    $outFiltered = Select-ByType $outs $filter
-    return $outFiltered
+    #FIXME: adding to an array probably is very slow 
+    #try something like this
+    # $items = $items | ForEach-Object{ConvertTo-DoubleOrString($_)}
+    # Write-Host  ($items -eq $outs)
+    $itemsAlpha = Select-ByType $outs "string" 
+    $itemsNumeric = Select-ByType $outs "double"
+
+    return @($itemsAlpha, $itemsNumeric)
 }
 
 function Set-Items($items, $direction) {
+    <#
+    .Description
+    Set-Items takes the items & direction and sorts the items in that direction
+    #>     
     $sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
     return $sortedItems
 }
 
 $filepath, $filter, $direction = Format-Args $args
-$items = Get-Contents $filepath $filter
-$sortedItems = Set-Items $items $direction
+$itemsAlpha, $itemsNumeric = Get-Contents $filepath
+Write-Host $filter
+switch ($filter[0]) {
+    "s" { #from string
+        $items = $itemsAlpha 
+        $sortedItems = Set-Items $items $direction
+        }
+    "d" {#from double
+        $items = $itemsNumeric 
+        $sortedItems = Set-Items $items $direction
+    }
+    Default {
+        $sortedN = Set-Items $itemsNumeric $direction
+        $sortedA = Set-Items $itemsAlpha $direction
+        $sortedItems = $sortedN + $sortedA
+    }
+}
 Write-Host $sortedItems
