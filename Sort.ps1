@@ -40,15 +40,16 @@ function Format-Args($argv) {
     return @($filepath, $filter, $direction)
 }
 
-function Get-Contents($filepath, $filter) {
+
+function Get-ContentsTyped($filepath, $filter) {
     <#
         .DESCRIPTION
-        Get-Contents takes a filepath & filter and returns the filter applied to the contents of the file in an array.
+        Get-ContentsTyped takes a filepath & filter and returns the filter applied to the contents of the file in an array.
         If it fails to split the items by comma, then it returns an empty array.
     #>
     $items = Get-Content -Path $filepath 
     try {    
-        $items = $items.Split(",")
+        $items = ($items.Split(",")).Trim() 
     }
     catch {
         return @()
@@ -58,13 +59,53 @@ function Get-Contents($filepath, $filter) {
     return $outFiltered
 }
 
-function Set-Items($items, $direction) {
+function Set-AlphaSorted($items, $direction) {
+    <#
+        .DESCRIPTION
+        Set-AlphaSorted takes an array of strings and sorts them ignoring 
+        anything in the form "*" and '*'
+    #>
+        $hash = @{}
+        foreach ($item in $items) {
+            $value = @($item)
+            if ($item -match "'*'"){
+                $itemStripped = $item.Replace( "'" , "")
+                $hash[$itemStripped] += $value
+            }
+            elseif ($item -match '"*"'){
+                $itemStripped = $item.Replace( '"' , "")
+                $hash[$itemStripped] += $value
+            } else {
+                $hash[$item] += $value
+            }
+        }
+        $out = @()
+        ($hash.GetEnumerator() | Sort-Object -Descending:($direction[0] -eq 'd') ) | ForEach-Object {
+            $out += $_.Value
+        }
+        return $out
+}
+
+function Set-NumericSorted($items, $direction) {
     $sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
     return $sortedItems
 }
 
-
+##### Main Functionality ######
 $filepath, $filter, $direction = Format-Args $args
-$items = Get-Contents $filepath $filter
-$sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
-Write-Host ($sortedItems -Join ", ")
+$itemsAlpha = Get-ContentsTyped $filepath "string"
+$itemsNumeric = Get-ContentsTyped $filepath "double"
+$sortedNumeric = Set-NumericSorted $itemsNumeric $direction
+$sortedAlpha = Set-AlphaSorted $itemsAlpha $direction
+switch ($filter[0]) {
+    "s" { #string
+        $items = $sortedAlpha 
+    }
+    "d" { #double
+        $items = $sortedNumeric 
+    }
+    Default {
+        $items = $sortedNumeric + $sortedAlpha
+    }
+}
+Write-Host ($items -Join ",")
