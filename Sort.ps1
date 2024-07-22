@@ -41,32 +41,22 @@ function Format-Args($argv) {
 }
 
 
-function Get-Contents($filepath) {
+function Get-Contents($filepath, $filter) {
     <#
-    .Description
-    Get-Contents takes the filepath & returns a list of @(alpha , numeric) 
-    based on whether or not we could cast each item into a numeric type (double) or not
-    #>        
-    # Maybe this should just return alpha & numeric as a tuple
+        .DESCRIPTION
+        Get-Contents takes a filepath & filter and returns the filter applied to the contents of the file in an array.
+        If it fails to split the items by comma, then it returns an empty array.
+    #>
     $items = Get-Content -Path $filepath 
     try {    
-        $items = $items.Split(",")
+        $items = $items.Split(",") -replace " ", ""
     }
     catch {
         return @()
     }
-    $outs = @()
-    foreach ($item in $items ) {
-        $outs += ConvertTo-DoubleOrString($item)
-    }
-    #FIXME: adding to an array probably is very slow 
-    #try something like this
-    # $items = $items | ForEach-Object{ConvertTo-DoubleOrString($_)}
-    # Write-Host  ($items -eq $outs)
-    $itemsAlpha = Select-ByType $outs "string" 
-    $itemsNumeric = Select-ByType $outs "double"
-
-    return @($itemsAlpha, $itemsNumeric)
+    $itemsFiltered = $items | ForEach-Object{ConvertTo-DoubleOrString($_)} 
+    $outFiltered = Select-ByType $itemsFiltered $filter
+    return $outFiltered
 }
 
 function Set-ItemsTyped($items, $direction, $filter) {
@@ -119,23 +109,21 @@ function Set-ItemsTyped($items, $direction, $filter) {
     return $sortedItems
 }
 
-
+##### Main Functionality ######
 $filepath, $filter, $direction = Format-Args $args
-
-$itemsAlpha, $itemsNumeric = Get-Contents $filepath
+$itemsAlpha = Get-Contents $filepath "string"
+$itemsNumeric = Get-Contents $filepath "double"
+$sortedNumeric = Set-ItemsTyped $itemsNumeric $direction "double"
+$sortedAlpha = Set-ItemsTyped $itemsAlpha $direction "string"
 switch ($filter[0]) {
     "s" { #from string
-        $items = $itemsAlpha 
-        $sortedItems = Set-ItemsTyped $items $direction "string"
+        $items = $sortedAlpha 
     }
-    "d" {#from double
-        $items = $itemsNumeric 
-        $sortedItems = Set-ItemsTyped $items $direction "double"
+    "d" { #from double
+        $items = $sortedNumeric 
     }
     Default {
-        $sortedN = Set-ItemsTyped $itemsNumeric $direction "double"
-        $sortedA = Set-ItemsTyped $itemsAlpha $direction "string"
-        $sortedItems = $sortedN + $sortedA
+        $items = $sortedNumeric + $sortedAlpha
     }
 }
-Write-Host $sortedItems
+Write-Host ($items -Join ",")
