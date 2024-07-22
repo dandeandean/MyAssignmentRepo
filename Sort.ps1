@@ -40,12 +40,14 @@ function Format-Args($argv) {
     return @($filepath, $filter, $direction)
 }
 
-function Get-Contents($filepath, $filter) {
+
+function Get-Contents($filepath) {
     <#
-        .DESCRIPTION
-        Get-Contents takes a filepath & filter and returns the filter applied to the contents of the file in an array.
-        If it fails to split the items by comma, then it returns an empty array.
-    #>
+    .Description
+    Get-Contents takes the filepath & returns a list of @(alpha , numeric) 
+    based on whether or not we could cast each item into a numeric type (double) or not
+    #>        
+    # Maybe this should just return alpha & numeric as a tuple
     $items = Get-Content -Path $filepath 
     try {    
         $items = $items.Split(",")
@@ -53,18 +55,87 @@ function Get-Contents($filepath, $filter) {
     catch {
         return @()
     }
-    $itemsFiltered = $items | ForEach-Object{ConvertTo-DoubleOrString($_)} 
-    $outFiltered = Select-ByType $itemsFiltered $filter
-    return $outFiltered
+    $outs = @()
+    foreach ($item in $items ) {
+        $outs += ConvertTo-DoubleOrString($item)
+    }
+    #FIXME: adding to an array probably is very slow 
+    #try something like this
+    # $items = $items | ForEach-Object{ConvertTo-DoubleOrString($_)}
+    # Write-Host  ($items -eq $outs)
+    $itemsAlpha = Select-ByType $outs "string" 
+    $itemsNumeric = Select-ByType $outs "double"
+
+    return @($itemsAlpha, $itemsNumeric)
 }
 
-function Set-Items($items, $direction) {
+function Set-ItemsTyped($items, $direction, $filter) {
+    <#
+    .Description
+    Set-Items takes the items, direction & and filter and returns 
+    #>
+    if ($filter -eq "string") {
+        <# This is all very bad
+        # Also very flimsy b/c we don't account for «» or „“ ... 
+        # Actually there are a lot of diffent quotation marks
+        # see: https://en.wikipedia.org/wiki/Quotation_mark
+        #>
+        $hash = @{}
+        foreach ($item in $items) {
+            $value = @($item)
+            if ($item -match "'*'"){
+                $itemStripped = $item.Replace( "'" , "")
+                if ($hash.ContainsKey($itemStripped)){
+                    $hash[$item] += $value
+                }
+                else{
+                    $hash.Add($itemStripped,@($item))
+                }
+            }
+            elseif ($item -match '"*"'){
+                $itemStripped = $item.Replace( '"' , "")
+                if ($hash.ContainsKey($itemStripped)){
+                    $hash[$item] += $value
+                }
+                else {
+                    $hash.Add($itemStripped,@($item))
+                }
+            } else {
+                if ($hash.ContainsKey($item)){
+                    $hash[$item] += $value
+                }
+                else{
+                $hash.Add($item,$value)
+                }
+            }
+        }
+        $out = @()
+        ($hash.GetEnumerator() | Sort-Object -Descending:($direction[0] -eq 'd') ) | ForEach-Object {
+            $out += $_.Value
+        }
+        return $out
+    }
     $sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
     return $sortedItems
 }
 
 
 $filepath, $filter, $direction = Format-Args $args
-$items = Get-Contents $filepath $filter
-$sortedItems = $items | Sort-Object -Descending:($direction[0] -eq 'd')
-Write-Host ($sortedItems -Join ", ")
+
+$itemsAlpha, $itemsNumeric = Get-Contents $filepath
+switch ($filter[0]) {
+    "s" { #from string
+        $items = $itemsAlpha 
+        $sortedItems = Set-ItemsTyped $items $direction "string"
+    }
+    "d" {#from double
+        $items = $itemsNumeric 
+        $sortedItems = Set-ItemsTyped $items $direction "double"
+    }
+    Default {
+        $sortedN = Set-ItemsTyped $itemsNumeric $direction "double"
+        $sortedA = Set-ItemsTyped $itemsAlpha $direction "string"
+        $sortedItems = $sortedN + $sortedA
+    }
+}
+Write-Host $sortedItems
