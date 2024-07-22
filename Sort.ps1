@@ -47,7 +47,8 @@ function Get-Contents($filepath, $filter) {
         $items = $items.Split(",")
     }
     catch {
-        throw "Failed to parse the file. Make sure the file is a CSV." 
+        # throw "Failed to parse the file. Make sure the file is a CSV." 
+        return @()
     }
     $itemsFiltered = $items | ForEach-Object{ConvertTo-DoubleOrString($_)} 
     $outFiltered = Select-ByType $itemsFiltered $filter
