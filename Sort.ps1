@@ -93,21 +93,16 @@ function Set-NumericSorted($items, $direction) {
     return $sortedItems
 }
 
-##### Main Functionality ######
+##### Entry Point ######
 $filepath, $filter, $direction = Format-Args $args
 $itemsAlpha = Get-ContentsTyped $filepath "string"
 $itemsNumeric = Get-ContentsTyped $filepath "double"
-$sortedNumeric = Set-NumericSorted $itemsNumeric $direction
-$sortedAlpha = Set-AlphaSorted $itemsAlpha $direction
-switch ($filter[0]) {
-    "s" { #string
-        $items = $sortedAlpha 
-    }
-    "d" { #double
-        $items = $sortedNumeric 
-    }
-    Default {
-        $items = $sortedNumeric + $sortedAlpha
-    }
+$sortedNumeric =@()
+$sortedAlpha =@()
+if (@("o","d") -contains $filter[0] ){
+    $sortedNumeric = Set-NumericSorted $itemsNumeric $direction
 }
-Write-Host ($items -Join ",")
+if (@("o","s") -contains $filter[0] ){
+    $sortedAlpha = Set-AlphaSorted $itemsAlpha $direction
+}
+Write-Host ($sortedNumeric + $sortedAlpha -Join ",")
